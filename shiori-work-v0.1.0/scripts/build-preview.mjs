@@ -1,0 +1,11 @@
+import { readFileSync,writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { ROOT } from '../src/config.mjs';
+const avatar='data:image/png;base64,'+readFileSync(resolve(ROOT,'web/avatar.png')).toString('base64');
+const css=readFileSync(resolve(ROOT,'web/style.css'),'utf8')+readFileSync(resolve(ROOT,'web/delegation.css'),'utf8');
+const driver=readFileSync(resolve(ROOT,'scripts/preview-driver.js'),'utf8');
+const component=readFileSync(resolve(ROOT,'web/delegation-ui.mjs'),'utf8').replaceAll('export function','function');
+const inline=`const {delegationPanel,delegationForm}=(()=>{${component}\nreturn {delegationPanel,delegationForm};})();`;
+const js=readFileSync(resolve(ROOT,'web/app.mjs'),'utf8').replace("import { delegationPanel, delegationForm } from './delegation-ui.mjs';",inline).replaceAll('./avatar.png',avatar);
+const html=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>しおり Work — 操作プレビュー</title><style>${css}</style></head><body><div id="app"></div><div id="overlays"></div><div id="toast" role="status" aria-live="polite"></div><script>${driver.replaceAll('</script','<\\/script')}</script><script type="module">${js.replaceAll('</script','<\\/script')}</script></body></html>`;
+writeFileSync(resolve(ROOT,'preview.html'),html);console.log('Created preview.html (offline UI simulation)');

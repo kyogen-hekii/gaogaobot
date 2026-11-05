@@ -1,0 +1,18 @@
+{
+  "port": 4317,
+  "maxConcurrent": 2,
+  "maxQueued": 30,
+  "dailyRuns": 40,
+  "timeoutMs": 180000,
+  "outerProvider": "demo",
+  "providers": [
+    {"id":"demo","label":"デモ（外部通信なし）","kind":"demo","enabled":true,"cwd":"workspaces/outer"},
+    {"id":"claude","label":"Claude Code","kind":"claude","enabled":false,"cwd":"workspaces/outer","command":"claude"},
+    {"id":"copilot","label":"GitHub Copilot","kind":"copilot","enabled":false,"cwd":"workspaces/outer","command":"copilot"}
+  ],
+  "runners": [
+    {"id":"demo","label":"デモの仕事場","description":"模擬実行。実コードの読み取り・変更・テストはしません。","kind":"demo","enabled":true,"cwd":"workspaces/demo","allowWrite":true},
+    {"id":"claude-dev","label":"Claude Code / 開発","description":"登録済みリポジトリの調査・開発","kind":"claude","enabled":false,"cwd":"workspaces/demo","command":"claude","allowWrite":false,"allowedTools":["Read","Glob","Grep"]},
+    {"id":"copilot-dev","label":"Copilot / 開発","description":"登録済みリポジトリの調査・開発","kind":"copilot","enabled":false,"cwd":"workspaces/demo","command":"copilot","allowWrite":false,"allowedTools":["view","glob","grep"]}
+  ]
+}

@@ -1,0 +1,22 @@
+.cache/
+node_modules/
+.data/
+.env
+.env.*
+!.env.example
+config.local.json
+config.local.json.*.bak
+*.log
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+*.pem
+*.key
+
+# Original delivery archive and generated previews/reports.
+/shiori-work-v0.1.0.zip
+/shiori-work-v0.1.0/preview.html
+/shiori-work-v0.1.0/docs/node-test-results.txt
+/shiori-work-v0.1.0/docs/browser-preview-results.json
+/shiori-work-v0.1.0/docs/screenshots/

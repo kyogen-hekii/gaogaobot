@@ -1,0 +1,40 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync,rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { resolve } from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { request as httpRequest } from 'node:http';
+import { loadConfig as loadAppConfig,ROOT } from '../src/config.mjs';
+const loadConfig=(base,override={})=>loadAppConfig(base,{ignoreLocalConfig:true,...override});
+import { Store } from '../src/store.mjs';
+import { createApp } from '../src/server.mjs';
+import { runCLI } from '../src/adapters.mjs';
+const fixture=resolve(ROOT,'tests/fixtures/fake-cli.mjs');
+const profile=kind=>({kind,cwd:ROOT,command:process.execPath,commandArgs:[fixture],allowedTools:['Read']});
+const binding=()=>({providerSessionId:randomUUID(),established:false});
+test('Claude subprocess JSONL is normalized, session captured',async()=>{let sid;const b=binding();const r=await runCLI(profile('claude'),b,'inner','hello',{onSession:s=>sid=s});assert.equal(r.text,'Fixture reply');assert.equal(sid,b.providerSessionId);assert(!r.text.includes('must not display'));});
+test('Copilot subprocess JSONL is normalized',async()=>{const r=await runCLI(profile('copilot'),binding(),'inner','hello');assert.equal(r.text,'Copilot fixture reply');});
+test('CLI protocol failures are not accepted as success',async()=>{await assert.rejects(runCLI(profile('claude'),binding(),'inner','invalid'),/INVALID_PROTOCOL/);});
+test('CLI nonzero and error result become failure',async()=>{await assert.rejects(runCLI(profile('claude'),binding(),'inner','failure'),/Authentication/);});
+test('timeout terminates a hung child process',async()=>{await assert.rejects(runCLI(profile('claude'),binding(),'inner','stall',{timeoutMs:100}),/TIMEOUT/);});
+test('abort stops child without inventing success',async()=>{const c=new AbortController();const p=runCLI(profile('claude'),binding(),'inner','stall',{signal:c.signal});setTimeout(()=>c.abort(),80);await assert.rejects(p,/CANCELED/);});
+test('missing CLI is explicit; no fallback',async()=>{await assert.rejects(runCLI({kind:'claude',cwd:ROOT,command:'/does-not-exist'},binding(),'inner','x'),/見つかりません/);});
+test('malformed provider session callback cannot crash server',async()=>{await assert.rejects(runCLI(profile('claude'),binding(),'inner','hello',{onSession:()=>{throw new Error('bad session');}}),/bad session/);});
+
+async function harness(t){const dir=mkdtempSync(resolve(tmpdir(),'shiori-http-'));const config=loadConfig(ROOT,{port:0,dataDir:dir,dailyRuns:200});const app=createApp(config,{demoDelay:5});await new Promise(r=>app.server.listen(0,'127.0.0.1',r));const base=`http://127.0.0.1:${app.server.address().port}`;t.after(async()=>{await app.close();rmSync(dir,{recursive:true,force:true});});const state=await (await fetch(base+'/api/state')).json();const post=(path,body={},extra={})=>fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json','X-Shiori-CSRF':state.csrf,...extra},body:JSON.stringify(body)});return {app,base,post,state};}
+async function waitFor(app,pred){for(let i=0;i<100;i++){if(pred())return;await new Promise(r=>setTimeout(r,20));}throw new Error('timeout');}
+test('HTTP shell is served with CSP and only public files',async t=>{const {base}=await harness(t);const r=await fetch(base+'/');assert.equal(r.status,200);assert(r.headers.get('content-security-policy').includes("frame-ancestors 'none'"));assert((await r.text()).includes('しおり'));assert.equal((await fetch(base+'/src/server.mjs')).status,404);assert.equal((await fetch(base+'/.data/shiori.sqlite')).status,404);});
+test('CSRF and Origin reject unauthorized writes',async t=>{const {base,post}=await harness(t);const a=await fetch(base+'/api/conversations',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});assert.equal(a.status,403);const b=await post('/api/conversations',{}, {Origin:'https://evil.invalid'});assert.equal(b.status,403);});
+test('Host guard rejects DNS rebinding host',async t=>{const {base}=await harness(t);const status=await new Promise((resolve,reject)=>{const req=httpRequest(base+'/api/state',{headers:{Host:'evil.invalid'}},r=>{r.resume();resolve(r.statusCode);});req.on('error',reject);req.end();});assert.equal(status,403);});
+test('external event endpoint requires separately configured token',async t=>{const {post}=await harness(t);const r=await post('/api/hooks/events',{id:'event',prompt:'x'});assert.equal(r.status,401);});
+test('HTTP round trip: chat, draft, approval, result, acceptance',async t=>{const {post,app}=await harness(t);
+ let r=await post('/api/conversations/main/messages',{text:'設計レビューの準備を整理してください。改修しない。'},{'Idempotency-Key':'http-1'});assert.equal(r.status,200);
+ await waitFor(app,()=>app.store.list('works').length===1&&!app.engine.active.size);
+ const w=app.store.list('works')[0];r=await post(`/api/works/${w.id}/dispatch`,{runnerId:'demo',mode:'read',instruction:'未決事項を調査してください'});assert.equal(r.status,200);const a=await r.json();
+ r=await post(`/api/approvals/${a.id}/decision`,{decision:'approve',digest:a.digest});assert.equal(r.status,200);
+ await waitFor(app,()=>app.store.must('works',w.id).status==='review'&&!app.engine.active.size&&!app.store.list('jobs').some(x=>x.status==='queued'));
+ assert.equal(app.store.list('artifacts').length,1);
+ r=await post(`/api/works/${w.id}/accept`,{revision:w.revision,checked:[0,1]});assert.equal(r.status,200);assert.equal((await r.json()).status,'done');
+});
+test('state persists on disk independently of a model session',()=>{const dir=mkdtempSync(resolve(tmpdir(),'shiori-db-'));const path=resolve(dir,'test.sqlite');let s=new Store(path);s.put('works',{id:'work-1',objective:'persistent goal'});s.close();s=new Store(path);assert.equal(s.must('works','work-1').objective,'persistent goal');s.close();rmSync(dir,{recursive:true,force:true});});

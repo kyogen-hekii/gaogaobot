@@ -1,0 +1,5 @@
+.data/
+config.local.json
+config.local.json.*.bak
+node_modules/
+*.log

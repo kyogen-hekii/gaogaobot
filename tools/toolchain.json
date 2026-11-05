@@ -1,0 +1,12 @@
+{
+  "nodeVersion": "24.19.0",
+  "node": "C:/Users/me/AppData/Local/mise/installs/node/24.19.0/node.exe",
+  "mise": "C:/Users/me/scoop/apps/mise/current/bin/mise.exe",
+  "git": "C:/Users/me/scoop/apps/git/current/cmd/git.exe",
+  "rg": "C:/Users/me/scoop/apps/ripgrep/current/rg.exe",
+  "powershell": "C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+  "cmd": "C:/Windows/System32/cmd.exe",
+  "windows": "C:/Windows",
+  "userProfile": "C:/Users/me",
+  "miseData": "C:/Users/me/AppData/Local/mise"
+}

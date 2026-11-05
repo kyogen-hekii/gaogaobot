@@ -1,0 +1,14 @@
+{
+  "setting": "chat.agent.sandbox.fileSystem.userConfiguredPaths",
+  "settingsFile": "C:/Users/me/AppData/Roaming/Code/User/settings.json",
+  "readonlyPaths": [
+    "C:/Users/me/AppData/Local/mise/installs/node/24.19.0",
+    "C:/Users/me/scoop/apps/mise/current",
+    "C:/Users/me/scoop/apps/git/current",
+    "C:/Users/me/scoop/apps/ripgrep/current",
+    "C:/Users/me/AppData/Roaming/Code/User/settings.json",
+    "C:/Users/me/AppData/Roaming/Code/agent-host/sdk-cache/codex",
+    "C:/Users/me/AppData/Roaming/Code/agentPlugins",
+    "C:/Users/me/.codex/config.toml"
+  ]
+}
