@@ -104,7 +104,7 @@ Windowsネイティブでサーバー・SQLite・模擬CLI・Claudeの会話接�
 | 管理 | 目的・制約・受け入れ条件、版管理、実行承認、決定履歴、明示的な受け入れ |
 | 継続 | SQLite永続化、キュー、同一セッションと仕事場の排他、停止、再起動後の照合 |
 | 外ループ | 定期確認、トークン付きイベント受付、実行結果を受けたOuterの再評価 |
-| 接続 | Demo、Claude Code、Copilot CLIの差し替え。実行先は管理者がローカル設定で登録 |
+| 接続 | Demo、Claude Code、Copilot CLI、Codex CLIの差し替え。実行先は管理者がローカル設定で登録 |
 | 画面 | 会話中心の入口、仕事、アクティビティ、定期確認、ライブラリ、設定 |
 
 ## 実AIをつなぐ
@@ -184,8 +184,11 @@ SSO／マルチユーザーRBAC、SlackやTeamsの実接続、汎用ブラウザ
 ## 構成と追加資料
 
 - `src/engine.mjs`：管理・承認・ジョブ・外ループ
+- `src/delegation.mjs`：委任の検証・続行・停止と、条件ごとの確認結果
 - `src/outer.mjs`：管理コンテキストと構造化応答
 - `src/adapters.mjs`：CLI接続。プロンプトは標準入力、`shell: false`
+- `src/codex.mjs`：Codex execの引数・イベント正規化・厳密スキーマ
+- `src/models.mjs`：モデルIDの検証と候補一覧
 - `src/store.mjs`：SQLite保存と操作重複排除
 - `web/`：会話中心のUI
 - `workspaces/outer/POLICY.md`：管理判断の規則

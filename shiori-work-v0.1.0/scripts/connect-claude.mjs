@@ -31,7 +31,7 @@ const runners=[
 ];
 for(const runner of runners)if(!(config.runners||[]).some(r=>r.id===runner.id))config.runners=[...(config.runners||[]),runner];
 for(const runner of config.runners)if(['claude-read','claude-edit'].includes(runner.id))runner.restricted=true;
-loadConfig(ROOT,{...config,ignoreLocalConfig:true});
+loadConfig(ROOT,{...structuredClone(config),ignoreLocalConfig:true});
 if(process.argv.includes('--apply')){
   const output=JSON.stringify(config,null,2)+'\n';
   if(raw!==output){

@@ -10,7 +10,7 @@ Windowsのコマンドは、ルートの [dev.cmd](../dev.cmd) を経由して�
 .\dev.cmd node tools/check-sandbox.mjs
 ```
 
-- [toolchain.json](toolchain.json)：この端末のツール配置。Nodeを変更するときは [dev.cmd](../dev.cmd)、[mise.toml](../mise.toml)、アプリの [.node-version](../shiori-work-v0.1.0/.node-version) も揃える。
+- [toolchain.json](toolchain.json)：この端末のツール配置。Nodeを変更するときは `nodeVersion` と `node` に加えて、[dev.cmd](../dev.cmd) の起動パスと [mise.toml](../mise.toml) も揃える。
 - [dev.mjs](dev.mjs)：PATHの大小文字重複を除去し、ツールを固定。npm・mise・一時ファイルの書き込み先はworkspace内の `.cache/`。
 - [sandbox-policy.json](sandbox-policy.json)：継続的な読み取り許可が必要な8対象。ユーザーフォルダー全体への許可は追加しない。
 - [setup-sandbox.mjs](setup-sandbox.mjs)：VS Codeの `chat.agent.sandbox.fileSystem.userConfiguredPaths` に読み取り対象だけを追加。
@@ -18,7 +18,6 @@ Windowsのコマンドは、ルートの [dev.cmd](../dev.cmd) を経由して�
 - [check-sandbox.mjs](check-sandbox.mjs)：設定の存在ではなく、現在のsandboxで実際に読めるかを検査。ファイルの内容は出力しない。
 
 セットアップは `--apply` なしで変更内容を表示し、付けるとバックアップ後に適用する。通常の開発や毎回の起動で再適用しない。
-エージェントの読み取りには `dev.cmd rg -n` と明示的な対象を使い、その場で組み立てた `node -e` は使わない。コードが必要な診断は目的を限定したファイルにし、テストは既存のnpmスクリプトを実行する。Node全体・インラインコード・dev.cmd全体を包括的な恒久許可の対象にしない。ホスト側の承認は別に判定されるため、将来の承認が一切不要とは保証しない。
 エージェントの読み取りには `dev.cmd rg -n` と明示的な対象を使い、その場で組み立てた `node -e` は使わない。コードが必要な診断は目的を限定したファイルにし、テストは既存のnpmスクリプトを実行する。Node全体・インラインコード・dev.cmd全体を包括的な恒久許可の対象にしない。ホスト側の承認は別に判定されるため、将来の承認が一切不要とは保証しない。
 既存の書き込み許可・拒否規則・承認方式・ネットワーク設定は変更しない。
 
